@@ -53,7 +53,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       driver = "raw_exec"
         config {
           command = "bash"
-          args [ "local/artifact-place.sh", "-p", "-d", "/opt/fileserve/static_assets", "-a", "local/static-assets-{{ template "GET_HASH" }}.tar.gz" ]
+          args = [ "local/artifact-place.sh", "-p", "-d", "/opt/fileserve/static_assets", "-a", "local/static-assets-{{ template "GET_HASH" }}.tar.gz" ]
         } 
       resources {
         cpu    = 20
