@@ -1,6 +1,6 @@
 job "static-assets-{{ env "CHEF_ENV" }}" {
   datacenters = ["awse"]
-  type = "batch"
+  type = "system"
 # for some reason, we are not able to use this further down in the job
 #meta {
 #    app_name = "static-assets"
@@ -36,7 +36,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       interval = "1m"
       attempts = 2
       delay    = "15s"
-      mode     = "delay"
+      mode     = "fail"
     }
     count = {{ env "COUNT" }}
 
@@ -44,7 +44,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       # set this as the leader so the other tasks exit
       leader = true
         artifact {
-          source = "https://jenkins-archive.traitify.com/static-assets/static-assets-{{ template "GET_HASH" }}.tar.gz"
+        source = "https://jenkins-archive.traitify.com/static-assets/static-assets-<<< env "GIT_COMMIT" >>>.tar.gz"
         }
         artifact {
           source = "https://jenkins-archive.traitify.com/ops_scripts/artifact-place.sh"
@@ -53,11 +53,11 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       driver = "raw_exec"
         config {
           command = "bash"
-          args = [ "local/artifact-place.sh", "-p", "-d", "/opt/fileserve/static_assets", "-a", "local/static-assets-{{ template "GET_HASH" }}.tar.gz" ]
+          args = [ "local/artifact-place.sh", "-x", "-p", "-d", "/opt/fileserve/static_assets", "-a", "local/static-assets-<<< env "GIT_COMMIT">>>.tar.gz" ]
         } 
       resources {
         cpu    = 100
-        memory = 10
+        memory = 100
       }
     }
   }
