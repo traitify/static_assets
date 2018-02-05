@@ -62,4 +62,3 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
     }
   }
 }
-
