@@ -1,15 +1,7 @@
 job "static-assets-{{ env "CHEF_ENV" }}" {
   datacenters = ["awse"]
-  type = "system"
-# for some reason, we are not able to use this further down in the job
-#meta {
-#    app_name = "static-assets"
-#}
-
-#constraint {
-#  attribute = "${node.class}"
-#  value = "orgs-stag"
-#}
+  type = "service"
+  
   constraint {
     attribute = "${meta.role}"
       value     = "fileserve"
