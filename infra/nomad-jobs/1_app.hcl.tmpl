@@ -30,7 +30,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       delay    = "15s"
       mode     = "fail"
     }
-    count = 1
+    count = {{ env "COUNT" }}
 
     task "static-assets" {
       # set this as the leader so the other tasks exit
