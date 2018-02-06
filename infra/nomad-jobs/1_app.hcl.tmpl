@@ -1,0 +1,192 @@
+job "static-assets-{{ env "CHEF_ENV" }}" {
+  datacenters = ["awse"]
+  type = "system"
+# for some reason, we are not able to use this further down in the job
+#meta {
+#    app_name = "static-assets"
+#}
+
+#constraint {
+#  attribute = "${node.class}"
+#  value = "orgs-stag"
+#}
+  constraint {
+    attribute = "${meta.role}"
+      value     = "fileserve"
+  }
+  constraint {
+    attribute = "${meta.env}"
+    value     = "{{ env "CHEF_ENV" }}"
+  }
+
+# set our update policy
+  update {
+    max_parallel     = 1
+      health_check     = "task_states"
+      min_healthy_time = "30s"
+      healthy_deadline = "4m"
+      auto_revert      = {{ env "AUTO_REVERT" }}
+      #canary           = 1
+      #stagger          = "30s"
+  }
+
+  group "app" {
+    # set our restart policy
+    restart {
+      interval = "1m"
+      attempts = 2
+      delay    = "15s"
+      mode     = "fail"
+    }
+    count = 1
+
+    task "static-assets" {
+      # set this as the leader so the other tasks exit
+      leader = true
+      artifact {
+        source = "https://jenkins-archive.traitify.com/static-assets/static-assets-{{ template "GET_HASH" }}.tar.gz"
+        destination = "local/static-assets"
+      }
+      # also grab the stuff we need for apach
+      artifact {
+        source = "https://jenkins-archive.traitify.com/static-assets/static-assets-apache-config-{{ template "GET_HASH" }}.tar.gz"
+        destination = "local/apache"
+      }
+      template {
+        source = "local/apache/sites-enabled/fileserve.traitify.com.conf.tmpl"
+        destination = "etc/apache2/sites-enabled/traitify.com.conf"
+        change_mode = "noop"
+        perms = "664"
+      }
+      template {
+        source = "local/apache/conf-enabled/traitify-logging.conf.tmpl"
+        destination = "etc/apache2/conf-enabled/traitify-logging.conf"
+        change_mode = "noop"
+        perms = "664"
+      }
+      template {
+        source = "local/apache/mods-enabled/ssl.conf.tmpl"
+        destination = "etc/apache2/mods-enabled/ssl.conf"
+        change_mode = "noop"
+        perms = "664"
+      }
+      template {
+        source = "local/apache/ssl/ssl.crt_key.tmpl"
+        destination = "etc/apache2/ssl/ssl.crt_key"
+        change_mode = "restart"
+        splay = "3h"
+        perms = "664"
+      }
+      template {
+        source = "local/apache/envvars.tmpl"
+        destination = "etc/apache2/envvars"
+        change_mode = "noop"
+        perms = "664"
+      }
+      template {
+        source = "local/apache/ports.conf.tmpl"
+        destination = "etc/apache2/ports.conf"
+        change_mode = "noop"
+        perms = "664"
+      }
+      template {
+        source = "local/apache/apache2.conf.tmpl"
+        destination = "etc/apache2/apache2.conf"
+        change_mode = "noop"
+        perms = "664"
+      }
+      # set our environment variables
+      env {
+        CHEF_ENV = "${meta.env}"
+        APP_NAME = "static-assets"
+        LOCAL_HOSTNAME = "${node.unique.name}"
+        CHEF_ROLE = "${meta.role}"
+      }
+      # our image setup
+      driver = "exec"
+        config {
+          command = "apachectl"
+          args = [  "-D", "FOREGROUND", "-k", "start" ]
+        } 
+      resources {
+        cpu    = 500
+        memory = 500
+        network {
+          port "http" {}
+          port "https" {}
+        }
+      }
+
+      # add in service discovery
+      service {
+        name = "static-assets-http"
+        tags = ["${node.unique.name}", "host__${node.unique.name}", "{{ template "GET_HASH" }}", "version__{{ template "GET_HASH" }}", "${meta.env}", "env__${meta.env}", "${meta.env}-fileserve-prefix-/static_assets strip=/static_assets proto=http", "consuldogConfig:static-assets-apache.yaml.tmpl:apache" ]
+
+        port = "http"
+
+        # we only do a basic tcp check on the http port since all it does is forward to the https port
+        check {
+          name = "http"
+          path = "/monitor/ping"
+          initial_status = "critical"
+          type     = "http"
+          protocol = "http"
+          port     = "http"
+          interval = "5s"
+          timeout  = "2s"
+        }
+      }
+
+      # add in service discovery so we can find the https
+      service {
+        name = "static-assets"
+        tags = ["${node.unique.name}", "host__${node.unique.name}", "{{ template "GET_HASH" }}", "version__{{ template "GET_HASH" }}", "${meta.env}", "env__${meta.env}", "${meta.env}-fileserve-prefix-/static_assets strip=/static_assets proto=https", "consuldogConfig:static-assets-http_check.yaml.tmpl:http_check" ]
+
+        port = "https"
+
+        check {
+          name = "https"
+          path     = "/monitor/ping"
+          initial_status = "critical"
+          type     = "http"
+          protocol = "https"
+          port     = "https"
+          interval = "5s"
+          timeout  = "2s"
+        }
+      }
+    }
+
+    task "log-shipper" {
+      # grab our config file template
+      artifact {
+        # for development
+        source = "https://jenkins-archive.traitify.com/static-assets/static-assets-remote-syslog2-{{ template "GET_HASH" }}.yml.tmpl"
+      }
+      # turn it into the correct config
+      template {
+        source = "local/static-assets-remote-syslog2-{{ template "GET_HASH" }}.yml.tmpl"
+        destination = "local/remote-syslog2.yml"
+        change_mode = "noop"
+        perms = "664"
+      }
+      # set our environment variables
+      env {
+        CHEF_ENV = "${meta.env}"
+        APP_NAME = "static-assets"
+        LOCAL_HOSTNAME = "${node.unique.name}"
+        LOG_TASK_NAME = "static-assets"
+      }
+      # grant access to secrets
+      driver = "exec"
+      config {
+        command = "/usr/local/bin/remote_syslog"
+        args = [ "-c", "/local/remote-syslog2.yml", "-D" ]
+      }
+      resources {
+        cpu    = 100
+        memory = 100
+      }
+    }
+  }
+}
