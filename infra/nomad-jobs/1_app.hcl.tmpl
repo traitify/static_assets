@@ -93,6 +93,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
         APP_NAME = "static-assets"
         LOCAL_HOSTNAME = "${node.unique.name}"
         CHEF_ROLE = "${meta.role}"
+        GIT_HASH = "{{ template "GET_HASH" }}"
       }
       # our image setup
       driver = "exec"
