@@ -95,6 +95,11 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
         CHEF_ROLE = "${meta.role}"
         GIT_HASH = "{{ template "GET_HASH" }}"
       }
+      # grant access to secrets
+      vault {
+        policies = [ "{{ template "GET_SP" }}_sp" ]
+        change_mode = "noop"
+      }
       # our image setup
       driver = "exec"
         config {
