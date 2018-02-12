@@ -39,7 +39,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
         source = "https://jenkins-archive.traitify.com/static-assets/static-assets-{{ template "GET_HASH" }}.tar.gz"
         destination = "local/static-assets"
       }
-      # also grab the stuff we need for apach
+      # also grab the stuff we need for apache
       artifact {
         source = "https://jenkins-archive.traitify.com/static-assets/static-assets-apache-config-{{ template "GET_HASH" }}.tar.gz"
         destination = "local/apache"
@@ -87,6 +87,17 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
         change_mode = "noop"
         perms = "664"
       }
+			# grab our run file
+      artifact {
+        source = "https://jenkins-archive.traitify.com/static-assets/static-assets-run_apache-{{ template "GET_HASH" }}.sh.tmpl"
+      }
+      template {
+        source = "local/static-assets-run_apache-{{ template "GET_HASH" }}.sh.tmpl"
+        destination = "local/run_apache.sh"
+        change_mode = "noop"
+        perms = "755"
+      }
+
       # set our environment variables
       env {
         CHEF_ENV = "${meta.env}"
@@ -97,14 +108,14 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       }
       # grant access to secrets
       vault {
-        policies = [ "{{ template "GET_SP" }}_sp" ]
+        policies = [ "app-{{ env "CHEF_ENV" }}-fileserve" ]
         change_mode = "noop"
       }
       # our image setup
       driver = "exec"
         config {
-          command = "apachectl"
-          args = [  "-D", "FOREGROUND", "-k", "start" ]
+          command = "bash"
+          args = [ "local/run_apache.sh" ]
         } 
       resources {
         cpu    = 500
