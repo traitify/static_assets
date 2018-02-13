@@ -1,13 +1,15 @@
 # we use three different entries for redirects.  We could use mod_rewrite, but this is very little in the way of extra
 # code, and avoids that overhead.
 <VirtualHost {{ env "NOMAD_ADDR_http" }} >
-  ServerName    *
+  ServerName    fileserve.traitify.com
+  ServerAlias   *
   DocumentRoot  {{ env "NOMAD_TASK_DIR" }}/{{ env "APP_NAME" }}
 
 </VirtualHost>
 
 <VirtualHost {{ env "NOMAD_ADDR_https" }} >
-  ServerName      *
+  ServerName    fileserve.traitify.com
+  ServerAlias   *
   DocumentRoot  {{ env "NOMAD_TASK_DIR" }}/{{ env "APP_NAME" }}
   DirectoryIndex  index.html index.php index.php5
 
