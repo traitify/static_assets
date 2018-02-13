@@ -45,8 +45,8 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
         destination = "local/apache"
       }
       template {
-        source = "local/apache/sites-enabled/fileserve.traitify.com.conf.tmpl"
-        destination = "etc/apache2/sites-enabled/traitify.com.conf"
+        source = "local/apache/sites-enabled/app.conf.tmpl"
+        destination = "etc/apache2/sites-enabled/app.conf"
         change_mode = "noop"
         perms = "664"
       }

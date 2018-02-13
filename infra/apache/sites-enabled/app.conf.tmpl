@@ -7,7 +7,7 @@
 </VirtualHost>
 
 <VirtualHost {{ env "NOMAD_ADDR_https" }} >
-  ServerName      fileserve.traitify.com
+  ServerName      *
   DocumentRoot  {{ env "NOMAD_TASK_DIR" }}/{{ env "APP_NAME" }}
   DirectoryIndex  index.html index.php index.php5
 
