@@ -131,6 +131,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
           timeout  = "2s"
         }
       }
+    }
 
     task "log-shipper" {
       # grab our config file template
