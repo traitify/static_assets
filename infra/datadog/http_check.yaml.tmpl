@@ -2,7 +2,7 @@ init_config:
 
 instances:
   - name: static-assets
-    url: https://{{ .Address }}:{{ .Port }}/monitor/ping
+    url: http://{{ .Address }}:{{ .Port }}/monitor/ping
     include_content: true
     collect_response_time: true
     tags:
