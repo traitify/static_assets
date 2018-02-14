@@ -4,21 +4,7 @@
   ServerName    fileserve.traitify.com
   ServerAlias   *
   DocumentRoot  {{ env "NOMAD_TASK_DIR" }}/{{ env "APP_NAME" }}
-
-</VirtualHost>
-
-<VirtualHost {{ env "NOMAD_ADDR_https" }} >
-  ServerName    fileserve.traitify.com
-  ServerAlias   *
-  DocumentRoot  {{ env "NOMAD_TASK_DIR" }}/{{ env "APP_NAME" }}
   DirectoryIndex  index.html index.php index.php5
-
-  SSLEngine       On
-  #SSLProxyEngine  On
-  SSLCertificateFile /etc/apache2/ssl/ssl.crt_key
-  # we include the certkey in the certificate file above. It's not recommended, but it works fine, and is much easier when
-  # using nomad to template things out
-  #SSLCertificateKeyFile /etc/apache2/ssl/ssk.key
 
   # make sure to set an expiration or google doesn't like us
   ExpiresActive On

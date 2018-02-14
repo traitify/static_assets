@@ -1,5 +1,0 @@
-{{/* We include both the cert and the key here.  This is allowed but discouraged, and we want to move away from it once v6 is out TOOD */}}
-{{- with secret ( printf "traitifyca/issue/%s-%s" (executeTemplate "GET_SP") (env "CHEF_ROLE") ) ( printf "common_name=%s.traitify.com" (env "CHEF_ROLE") ) ( printf "alt_names=%s.%s.awse.traitify.com" (env "CHEF_ROLE") (env "CHEF_ENV") ) ( printf "ip_sans=%s" (env "attr.unique.network.ip-address" )) }}
-{{- .Data.certificate }}
-{{ .Data.private_key }}
-{{ end }}

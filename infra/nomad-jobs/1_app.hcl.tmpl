@@ -57,19 +57,6 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
         perms = "664"
       }
       template {
-        source = "local/apache/mods-enabled/ssl.conf.tmpl"
-        destination = "etc/apache2/mods-enabled/ssl.conf"
-        change_mode = "noop"
-        perms = "664"
-      }
-      template {
-        source = "local/apache/ssl/ssl.crt_key.tmpl"
-        destination = "etc/apache2/ssl/ssl.crt_key"
-        change_mode = "restart"
-        splay = "3h"
-        perms = "664"
-      }
-      template {
         source = "local/apache/envvars.tmpl"
         destination = "etc/apache2/envvars"
         change_mode = "noop"
@@ -122,7 +109,6 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
         memory = 500
         network {
           port "http" {}
-          port "https" {}
         }
       }
 
@@ -145,26 +131,6 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
           timeout  = "2s"
         }
       }
-
-      # add in service discovery so we can find the https
-      service {
-        name = "static-assets"
-        tags = ["${node.unique.name}", "host__${node.unique.name}", "{{ template "GET_HASH" }}", "version__{{ template "GET_HASH" }}", "${meta.env}", "env__${meta.env}", "${meta.env}-fileserve-prefix-/static_assets strip=/static_assets proto=https tlsskipverify=true", "consuldogConfig:static-assets-http_check.yaml.tmpl:http_check" ]
-
-        port = "https"
-
-        check {
-          name = "https"
-          path     = "/monitor/ping"
-          initial_status = "critical"
-          type     = "http"
-          protocol = "https"
-          port     = "https"
-          interval = "5s"
-          timeout  = "2s"
-        }
-      }
-    }
 
     task "log-shipper" {
       # grab our config file template
