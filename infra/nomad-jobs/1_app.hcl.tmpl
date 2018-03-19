@@ -17,7 +17,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       health_check     = "task_states"
       min_healthy_time = "30s"
       healthy_deadline = "4m"
-      auto_revert      = {{ env "AUTO_REVERT" }}
+      auto_revert      = {{ template "GET_VALUE" "infra/nomad/auto_revert" }}
       #canary           = 1
       #stagger          = "30s"
   }

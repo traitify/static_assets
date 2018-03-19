@@ -1,8 +1,14 @@
 default:
-  infra:
+  infra: 
+    nomad:
+      auto_revert: true 
     apache:
       access_log: "/alloc/logs/app.access.log"
       error_log: "/alloc/logs/app.error.log"
     remote_syslog:
       exclude_patterns: "['/server-status/?auto', '\"-\" 408 - \"-\" \"-\"']"
 
+prod: 
+  infra: 
+    nomad:  
+      auto_revert: true
