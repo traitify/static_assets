@@ -22,6 +22,14 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       #stagger          = "30s"
   }
 
+  # reschedule if it fails
+  reschedule {
+    delay          = "30s"
+    delay_function = "exponential"
+    max_delay      = "5m"
+    unlimited      = true
+  }
+
   group "app" {
     # set our restart policy
     restart {
@@ -52,32 +60,42 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       template {
         source = "local/apache/sites-enabled/app.conf.tmpl"
         destination = "etc/apache2/sites-enabled/app.conf"
-        change_mode = "noop"
+        change_mode = "restart"
         perms = "664"
+        splay = "10m"
+        vault_grace = "15m"
       }
       template {
         source = "local/apache/conf-enabled/traitify-logging.conf.tmpl"
         destination = "etc/apache2/conf-enabled/traitify-logging.conf"
-        change_mode = "noop"
+        change_mode = "restart"
         perms = "664"
+        splay = "10m"
+        vault_grace = "15m"
       }
       template {
         source = "local/apache/envvars.tmpl"
         destination = "etc/apache2/envvars"
-        change_mode = "noop"
+        change_mode = "restart"
         perms = "664"
+        splay = "10m"
+        vault_grace = "15m"
       }
       template {
         source = "local/apache/ports.conf.tmpl"
         destination = "etc/apache2/ports.conf"
-        change_mode = "noop"
+        change_mode = "restart"
         perms = "664"
+        splay = "10m"
+        vault_grace = "15m"
       }
       template {
         source = "local/apache/apache2.conf.tmpl"
         destination = "etc/apache2/apache2.conf"
-        change_mode = "noop"
+        change_mode = "restart"
         perms = "664"
+        splay = "10m"
+        vault_grace = "15m"
       }
 			# grab our run file
       artifact {
@@ -86,8 +104,10 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       template {
         source = "local/static-assets-run_apache-{{ template "GET_HASH" }}.sh.tmpl"
         destination = "local/run_apache.sh"
-        change_mode = "noop"
-        perms = "755"
+        change_mode = "restart"
+        perms = "664"
+        splay = "10m"
+        vault_grace = "15m"
       }
 
       # set our environment variables
