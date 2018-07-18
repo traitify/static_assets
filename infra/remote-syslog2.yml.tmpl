@@ -1,12 +1,12 @@
 files:
   - path: {{ template "GET_VALUE" "infra/apache/error_log" }}
-    tag: {{ env "APP_NAME" }}:alloc={{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }}:git={{ printf "%0.8s" (env "GIT_HASH") }}:task={{ env "NOMAD_GROUP_NAME" }}":error
+    tag: {{ env "APP_NAME" }} alloc={{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }} git={{ printf "%0.8s" (env "GIT_HASH") }} task={{ env "NOMAD_GROUP_NAME" }}:error
   - path: {{ template "GET_VALUE" "infra/apache/access_log" }}
-    tag: {{ env "APP_NAME" }}:alloc={{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }}:git={{ printf "%0.8s" (env "GIT_HASH") }}:task={{ env "NOMAD_GROUP_NAME" }}":access
+    tag: {{ env "APP_NAME" }} alloc={{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }} git={{ printf "%0.8s" (env "GIT_HASH") }} task={{ env "NOMAD_GROUP_NAME" }}:access
   - path: /alloc/logs/{{ env "LOG_TASK_NAME" }}.stdout.*
-    tag: {{ env "APP_NAME" }}:alloc={{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }}:git={{ printf "%0.8s" (env "GIT_HASH") }}:task={{ env "NOMAD_GROUP_NAME" }}":stdout
+    tag: {{ env "APP_NAME" }} alloc={{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }} git={{ printf "%0.8s" (env "GIT_HASH") }} task={{ env "NOMAD_GROUP_NAME" }}:stdout
   - path: /alloc/logs/{{ env "LOG_TASK_NAME" }}.stderr.*
-    tag: {{ env "APP_NAME" }}:alloc={{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }}:git={{ printf "%0.8s" (env "GIT_HASH") }}:task={{ env "NOMAD_GROUP_NAME" }}":stderr
+    tag: {{ env "APP_NAME" }} alloc={{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }} git={{ printf "%0.8s" (env "GIT_HASH") }} task={{ env "NOMAD_GROUP_NAME" }}:stderr
 hostname: {{ env "LOCAL_HOSTNAME" }}
 exclude_patterns: {{ template "GET_VALUE" "infra/remote_syslog/exclude_patterns" }}
 destination:
