@@ -145,7 +145,21 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       # add in service discovery
       service {
         name = "static-assets-http"
-        tags = ["${node.unique.name}", "host__${node.unique.name}", "{{ template "GET_HASH" }}", "version__{{ template "GET_HASH" }}", "${meta.env}", "env__${meta.env}", "${meta.env}-fileserve-prefix-/static_assets strip=/static_assets proto=http", "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-http_check-{{ template "GET_HASH" }}.yaml.tmpl http_check", "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-apache-{{ template "GET_HASH" }}.yaml.tmpl apache" ]
+        tags = [
+          "${node.unique.name}", "host__${node.unique.name}", 
+          "{{ template "GET_HASH" }}", "version__{{ template "GET_HASH" }}", 
+          "${meta.env}", "env__${meta.env}", 
+          "${meta.env}-fileserve-prefix-/static_assets strip=/static_assets proto=http", 
+
+          "traefik.enable=true",
+          "traefik.tags=${meta.env}",
+          "traefik.backend.loadbalancer.method=drr",
+          "traefik.frontend.passHostHeader=true",
+          "traefik.frontend.rule=Host:fileserve.traitify.com,fileserve-${meta.env}.traitify.com,fileserve.${meta.env}.awse.traitify.com;PathPrefixStrip:/static_assets",
+
+          "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-http_check-{{ template "GET_HASH" }}.yaml.tmpl http_check", 
+          "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-apache-{{ template "GET_HASH" }}.yaml.tmpl apache" 
+        ]
 
         port = "http"
 
