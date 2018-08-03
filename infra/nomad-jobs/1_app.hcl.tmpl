@@ -155,7 +155,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
           "traefik.tags=${meta.env}",
           "traefik.backend.loadbalancer.method=drr",
           "traefik.frontend.passHostHeader=true",
-          "traefik.frontend.rule=Host:fileserve.traitify.com,fileserve-${meta.env}.traitify.com,fileserve.${meta.env}.awse.traitify.com;PathPrefixStrip:/static_assets",
+          "traefik.frontend.rule=Host:fileserve.traitify.com,fileserve-${meta.env}.traitify.com,fileserve.${meta.env}.awse.traitify.com,local.fileserve.service.consul;PathPrefixStrip:/static_assets",
 
           "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-http_check-{{ template "GET_HASH" }}.yaml.tmpl http_check", 
           "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-apache-{{ template "GET_HASH" }}.yaml.tmpl apache" 
