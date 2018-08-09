@@ -2,6 +2,10 @@ default:
   infra: 
     nomad:
       auto_revert: true 
+      role: "private-cluster"
+      resources:
+        cpu: 500
+        memory: 500
     apache:
       access_log: "/alloc/logs/app.access.log"
       error_log: "/alloc/logs/app.error.log"
@@ -12,3 +16,7 @@ prod:
   infra: 
     nomad:  
       auto_revert: true
+      role: "fileserve"
+      resources:
+        cpu: 500
+        memory: 500
