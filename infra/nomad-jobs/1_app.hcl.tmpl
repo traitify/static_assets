@@ -1,7 +1,7 @@
 job "static-assets-{{ env "CHEF_ENV" }}" {
   datacenters = ["awse"]
   type = "service"
-  
+
   constraint {
     attribute = "${meta.role}"
     value     = "{{ template "GET_VALUE" "infra/nomad/role" }}"
@@ -30,7 +30,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
     unlimited      = true
   }
 
-  group "app" {
+  group "static-assets" {
     # set our restart policy
     restart {
       interval = "1m"
@@ -45,7 +45,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       size    = "2600"
     }
 
-    task "static-assets" {
+    task "app" {
       # set this as the leader so the other tasks exit
       leader = true
       artifact {
@@ -117,6 +117,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
         LOCAL_HOSTNAME = "${node.unique.name}"
         CHEF_ROLE = "${meta.role}"
         GIT_HASH = "{{ template "GET_HASH" }}"
+        TASK = "app"
       }
       # grant access to secrets
       vault {
@@ -128,7 +129,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
         config {
           command = "bash"
           args = [ "local/run_apache.sh" ]
-        } 
+        }
       resources {
         cpu    = {{ template "GET_VALUE" "infra/nomad/resources/cpu" }}
         memory = {{ template "GET_VALUE" "infra/nomad/resources/memory" }}
@@ -137,7 +138,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
           port "http" {}
         }
       }
-      
+
       logs {
         max_files     = 5
         max_file_size = 500
@@ -147,10 +148,10 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       service {
         name = "static-assets-http"
         tags = [
-          "${node.unique.name}", "host__${node.unique.name}", 
-          "{{ template "GET_HASH" }}", "version__{{ template "GET_HASH" }}", 
-          "${meta.env}", "env__${meta.env}", 
-          "${meta.env}-fileserve-prefix-/static_assets strip=/static_assets proto=http", 
+          "${node.unique.name}", "host__${node.unique.name}",
+          "{{ template "GET_HASH" }}", "version__{{ template "GET_HASH" }}",
+          "${meta.env}", "env__${meta.env}",
+          "${meta.env}-fileserve-prefix-/static_assets strip=/static_assets proto=http",
 
           "traefik.enable=true",
           "traefik.tags=${meta.env}",
@@ -158,8 +159,8 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
           "traefik.frontend.passHostHeader=true",
           "traefik.frontend.rule=Host:fileserve.traitify.com,fileserve-${meta.env}.traitify.com,fileserve.${meta.env}.awse.traitify.com,local.fileserve.service.consul;PathPrefixStrip:/static_assets",
 
-          "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-http_check-{{ template "GET_HASH" }}.yaml.tmpl http_check", 
-          "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-apache-{{ template "GET_HASH" }}.yaml.tmpl apache" 
+          "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-http_check-{{ template "GET_HASH" }}.yaml.tmpl http_check",
+          "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-apache-{{ template "GET_HASH" }}.yaml.tmpl apache"
         ]
 
         port = "http"
