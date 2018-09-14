@@ -3,9 +3,9 @@ files:
     tag: {{ env "APP_NAME" }}:alloc:{{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }}:git:{{ printf "%0.8s" (env "GIT_HASH") }}:{{ env "TASK" }}:error
   - path: {{ template "GET_VALUE" "infra/apache/access_log" }}
     tag: {{ env "APP_NAME" }}:alloc:{{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }}:git:{{ printf "%0.8s" (env "GIT_HASH") }}:{{ env "TASK" }}:access
-  - path: /alloc/logs/{{ env "LOG_TASK_NAME" }}.stdout.*
+  - path: /alloc/logs/{{ env "TASK" }}.stdout.*
     tag: {{ env "APP_NAME" }}:alloc:{{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }}:git:{{ printf "%0.8s" (env "GIT_HASH") }}:{{ env "TASK" }}:stdout
-  - path: /alloc/logs/{{ env "LOG_TASK_NAME" }}.stderr.*
+  - path: /alloc/logs/{{ env "TASK" }}.stderr.*
     tag: {{ env "APP_NAME" }}:alloc:{{ printf "%0.8s" (env "NOMAD_ALLOC_ID") }}:git:{{ printf "%0.8s" (env "GIT_HASH") }}:{{ env "TASK" }}:stderr
 hostname: {{ env "LOCAL_HOSTNAME" }}
 exclude_patterns: {{ template "GET_VALUE" "infra/remote_syslog/exclude_patterns" }}
