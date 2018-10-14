@@ -2,7 +2,7 @@ default:
   infra: 
     nomad:
       auto_revert: true 
-      role: "private-cluster"
+      role: "public-cluster"
       resources:
         cpu: 500
         memory: 500
@@ -16,7 +16,3 @@ prod:
   infra: 
     nomad:  
       auto_revert: true
-      role: "fileserve"
-      resources:
-        cpu: 500
-        memory: 500
