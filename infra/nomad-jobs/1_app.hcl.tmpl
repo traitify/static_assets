@@ -10,6 +10,10 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
     attribute = "${meta.env}"
     value     = "{{ env "CHEF_ENV" }}"
   }
+  constraint {
+    attribute = "${meta.aws_lifecycle}"
+    value     = "{{ template "GET_VALUE" "infra/nomad/aws_lifecycle" }}"
+  }
 
 # set our update policy
   update {
