@@ -46,7 +46,7 @@
       "inline": [
         "# update packages",
         "apt-get update",
-        "apt-get -y install curl locales sudo gnupg",
+        "apt-get -y install curl locales sudo gnupg apache2",
         "# add our apt-repo",
         "curl https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo-pubkey.gpg -o /tmp/traitify-apt-repo-pubkey.gpg",
         "apt-key add /tmp/traitify-apt-repo-pubkey.gpg",
