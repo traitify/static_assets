@@ -39,7 +39,7 @@
         "update-ca-certificates",
 
         "# create our user",
-        "useradd -d /files -m -u {{ user `APPUID` }} -r appuser",
+        "useradd -d /files -m -u {{ user `APPUID` }} -r appuser"
       ]
     },
     {
