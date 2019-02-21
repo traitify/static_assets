@@ -53,7 +53,7 @@
         "# pull our utility scripts that we use",
         "curl https://jenkins-archive.traitify.com/ops-scripts/template-combiner-f63d14963e3e3f8d66659bcc44def7d89e59ee79.sh -o /files/template-combiner.sh",
         "chmod +x /files/template-combiner.sh",
-        "curl https://jenkins-archive.traitify.com/ops-scripts/template-functions-f63d14963e3e3f8d66659bcc44def7d89e59ee79.tmpl -o /files/template-functions.tmpl",
+        "curl https://jenkins-archive.traitify.com/ops-scripts/template-functions-f63d14963e3e3f8d66659bcc44def7d89e59ee79.tmpl -o /files/template-functions.tmpl"
       ]
     },
     {
