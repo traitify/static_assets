@@ -46,14 +46,14 @@
       "inline": [
         "# update packages",
         "apt-get update",
-        "apt-get -y install curl locales sudo gnupg apache2",
+        "apt-get -y install curl locales sudo gnupg",
         "# add our apt-repo",
         "curl https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo-pubkey.gpg -o /tmp/traitify-apt-repo-pubkey.gpg",
         "apt-key add /tmp/traitify-apt-repo-pubkey.gpg",
         "curl https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo.list -o /etc/apt/sources.list.d/traitify-apt-repo.list",
         "cat /etc/apt/sources.list.d/traitify-apt-repo.list",
         "apt-get update",
-        "apt-get -y install remote-syslog2 logrotate=3.15.0-3",
+        "apt-get -y install remote-syslog2 apache2 logrotate=3.15.0-3",
         "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin",
 
         "# set locale correctly",
@@ -71,7 +71,7 @@
         "# make sure that some apache modules are installed",
         "/usr/sbin/a2enmod status headers",
         "# fix ownerships for our run",
-        "chown -R appuser:appuser /var/run/apache2 /var/log/apache2 /var/lock/apache2",
+        "mkdir -p /var/run/apache2 /var/log/apache2 /var/lock/apache2", "chown -R appuser:appuser /var/run/apache2 /var/log/apache2 /var/lock/apache2",
         "# remove the default apache virtualhost",
         "rm /etc/apache2/sites-enabled/000-default.conf",
 
