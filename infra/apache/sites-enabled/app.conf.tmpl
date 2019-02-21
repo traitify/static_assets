@@ -3,7 +3,7 @@
 <VirtualHost {{ env "NOMAD_ADDR_http" }} >
   ServerName    fileserve.traitify.com
   ServerAlias   *
-  DocumentRoot  {{ env "NOMAD_TASK_DIR" }}/{{ env "APP_NAME" }}
+  DocumentRoot  /files/{{ env "APP_NAME" }}
   DirectoryIndex  index.html index.php index.php5
 
   # make sure to set an expiration or google doesn't like us
@@ -17,7 +17,7 @@
 
 </VirtualHost>
 
-<Directory {{ env "NOMAD_TASK_DIR" }}/{{ env "APP_NAME" }} >
+<Directory /files/{{ env "APP_NAME" }} >
   Options -Indexes +FollowSymLinks
   AllowOverride All
 

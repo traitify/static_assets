@@ -92,8 +92,8 @@
         "curl https://jenkins-archive.traitify.com/ops-scripts/run-as-service-511c86647279eda61cfeed265697eda800cc4039.sh -o /files/run-as-service.sh", "chmod +x /files/run-as-service.sh",
 
         "# expand our archive files",
-        "mkdir -p /files/deck-validator",
-        "tar -C /files/deck-validator -zxvf /files/static-assets.tar.gz", "rm /files/static-assets.tar.gz"
+        "mkdir -p /files/static-assets",
+        "tar -C /files/static-assets -zxvf /files/static-assets.tar.gz", "rm /files/static-assets.tar.gz"
       ]
     }
   ],
