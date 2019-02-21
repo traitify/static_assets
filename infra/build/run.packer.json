@@ -69,7 +69,7 @@
 
         "# do some apache config",
         "# make sure that some apache modules are installed",
-        "/usr/sbin/a2enmod status headers",
+        "/usr/sbin/a2enmod status headers expires",
         "# fix ownerships for our run",
         "mkdir -p /var/run/apache2 /var/log/apache2 /var/lock/apache2", "chown -R appuser:appuser /var/run/apache2 /var/log/apache2 /var/lock/apache2",
         "# remove the default apache virtualhost",
