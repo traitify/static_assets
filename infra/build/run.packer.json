@@ -12,7 +12,7 @@
     "commit": true,
     "changes": [
       "USER appuser",
-      "ENTRYPOINT [ \"/files/dumb-init\", \"/usr/sbin/apachectl\", \"-D\", \"FOREGROUND\", \"-k\", \"start\" ]",
+      "ENTRYPOINT [ \"/files/dumb-init\" ]",
       "VOLUME /archive /repo ",
       "ENV GIT_HASH none",
       "ENV APP_NAME {{ user `APP_NAME` }}",

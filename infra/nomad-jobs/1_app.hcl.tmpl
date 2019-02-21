@@ -102,6 +102,8 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       driver = "docker"
       config {
         image = "{{ template "GET_VALUE" "infra/docker/remote_repo" }}{{ env "APP_NAME" }}:{{ template "GET_HASH" }}"
+        command = "/usr/sbin/apachectl"
+        args = ["-D", "FOREGROUND", "-k", "start" ]
         network_mode = "host"
         labels = {
           env = "${meta.env}"
