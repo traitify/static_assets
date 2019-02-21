@@ -7,6 +7,8 @@ default:
       resources:
         cpu: 500
         memory: 500
+    docker:
+      remote_repo: "315316724794.dkr.ecr.us-east-1.amazonaws.com/"
     apache:
       access_log: "/alloc/logs/app.access.log"
       error_log: "/alloc/logs/app.error.log"

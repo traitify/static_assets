@@ -42,7 +42,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       delay    = "15s"
       mode     = "fail"
     }
-    count = {{ env "COUNT" }}
+    count = 2
 
     # needed for increased log file size
     ephemeral_disk {
@@ -52,68 +52,38 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
     task "app" {
       # set this as the leader so the other tasks exit
       leader = true
+      # all of the templates are already included in our container, however, we unfortunately cant use them until
+      # this is resolved: https://github.com/hashicorp/nomad/issues/2383. Once it is we can remove the artifact
+      # stanza
       artifact {
-        source = "https://jenkins-archive.traitify.com/static-assets/static-assets-{{ template "GET_HASH" }}.tar.gz"
-        destination = "local/static-assets"
-      }
-      # also grab the stuff we need for apache
-      artifact {
-        source = "https://jenkins-archive.traitify.com/static-assets/static-assets-apache-config-{{ template "GET_HASH" }}.tar.gz"
-        destination = "local/apache"
-      }
+        source      = "https://jenkins-archive.traitify.com/{{ env "APP_NAME" }}/{{ env "APP_NAME" }}-config_templates-{{ template "GET_HASH" }}.tar.gz"
+        destination = "/files"
+      } 
+      # turn it into the correct config
       template {
-        source = "local/apache/sites-enabled/app.conf.tmpl"
-        destination = "etc/apache2/sites-enabled/app.conf"
+        source = "files/config_templates/apache/sites-enabled/app.conf.tmpl"
+        destination = "local/etc/apache2/sites-enabled/app.conf"
         change_mode = "restart"
         perms = "664"
         splay = "10m"
         vault_grace = "15m"
       }
       template {
-        source = "local/apache/conf-enabled/traitify-logging.conf.tmpl"
-        destination = "etc/apache2/conf-enabled/traitify-logging.conf"
+        source = "files/config_templates/apache/conf-enabled/traitify-logging.conf.tmpl"
+        destination = "local/etc/apache2/conf-enabled/traitify-logging.conf"
         change_mode = "restart"
         perms = "664"
         splay = "10m"
         vault_grace = "15m"
       }
       template {
-        source = "local/apache/envvars.tmpl"
-        destination = "etc/apache2/envvars"
+        source = "files/config_templates/apache/ports.conf.tmpl"
+        destination = "local/etc/apache2/ports.conf"
         change_mode = "restart"
         perms = "664"
         splay = "10m"
         vault_grace = "15m"
       }
-      template {
-        source = "local/apache/ports.conf.tmpl"
-        destination = "etc/apache2/ports.conf"
-        change_mode = "restart"
-        perms = "664"
-        splay = "10m"
-        vault_grace = "15m"
-      }
-      template {
-        source = "local/apache/apache2.conf.tmpl"
-        destination = "etc/apache2/apache2.conf"
-        change_mode = "restart"
-        perms = "664"
-        splay = "10m"
-        vault_grace = "15m"
-      }
-			# grab our run file
-      artifact {
-        source = "https://jenkins-archive.traitify.com/static-assets/static-assets-run_apache-{{ template "GET_HASH" }}.sh.tmpl"
-      }
-      template {
-        source = "local/static-assets-run_apache-{{ template "GET_HASH" }}.sh.tmpl"
-        destination = "local/run_apache.sh"
-        change_mode = "restart"
-        perms = "664"
-        splay = "10m"
-        vault_grace = "15m"
-      }
-
       # set our environment variables
       env {
         CHEF_ENV = "${meta.env}"
@@ -125,15 +95,19 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
       }
       # grant access to secrets
       vault {
-        policies = [ "app-{{ env "CHEF_ENV" }}-fileserve" ]
+        policies = [ "app-{{ env "CHEF_ENV" }}-fileserve", "default" ]
         change_mode = "noop"
       }
       # our image setup
-      driver = "exec"
-        config {
-          command = "bash"
-          args = [ "local/run_apache.sh" ]
+      driver = "docker"
+      config {
+        image = "{{ template "GET_VALUE" "infra/docker/remote_repo" }}{{ env "APP_NAME" }}:{{ template "GET_HASH" }}"
+        network_mode = "host"
+        labels = {
+          env = "${meta.env}"
+          app_name = "{{ env "APP_NAME" }}"
         }
+      }
       resources {
         cpu    = {{ template "GET_VALUE" "infra/nomad/resources/cpu" }}
         memory = {{ template "GET_VALUE" "infra/nomad/resources/memory" }}
@@ -161,10 +135,7 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
           "traefik.tags=${meta.env}",
           "traefik.backend.loadbalancer.method=drr",
           "traefik.frontend.passHostHeader=true",
-          "traefik.frontend.rule=Host:fileserve.traitify.com,fileserve-${meta.env}.traitify.com,fileserve.${meta.env}.awse.traitify.com,local.fileserve.service.consul;PathPrefixStrip:/static_assets",
-
-          "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-http_check-{{ template "GET_HASH" }}.yaml.tmpl http_check",
-          "consuldogConfig https://jenkins-archive.traitify.com/static-assets/static-assets-apache-{{ template "GET_HASH" }}.yaml.tmpl apache"
+          "traefik.frontend.rule=Host:fileserve.traitify.com,fileserve-${meta.env}.traitify.com,fileserve.${meta.env}.awse.traitify.com,local.fileserve.service.consul;PathPrefixStrip:/static_assets"
         ]
 
         port = "http"
@@ -184,14 +155,16 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
     }
 
     task "log-shipper" {
-      # grab our config file template
+      # all of the templates are already included in our container, however, we unfortunately cant use them until
+      # this is resolved: https://github.com/hashicorp/nomad/issues/2383. Once it is we can remove the artifact
+      # stanza
       artifact {
-        # for development
-        source = "https://jenkins-archive.traitify.com/static-assets/static-assets-remote-syslog2-{{ template "GET_HASH" }}.yml.tmpl"
-      }
-      # turn it into the correct config
+        source      = "https://jenkins-archive.traitify.com/{{ env "APP_NAME" }}/{{ env "APP_NAME" }}-config_templates-{{ template "GET_HASH" }}.tar.gz"
+        destination = "/files"
+      } 
+      # turn our config template into a real file
       template {
-        source = "local/static-assets-remote-syslog2-{{ template "GET_HASH" }}.yml.tmpl"
+        source = "files/config_templates/remote-syslog2.yml.tmpl"
         destination = "local/remote-syslog2.yml"
         change_mode = "noop"
         perms = "664"
@@ -204,11 +177,54 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
         GIT_HASH = "{{ template "GET_HASH" }}"
         TASK = "app"
       }
-      # grant access to secrets
-      driver = "exec"
+      driver = "docker"
       config {
+        image = "{{ template "GET_VALUE" "infra/docker/remote_repo" }}{{ env "APP_NAME" }}:{{ template "GET_HASH" }}"
         command = "/usr/local/bin/remote_syslog"
         args = [ "-c", "/local/remote-syslog2.yml", "-D" ]
+        network_mode = "host"
+        labels = {
+          env = "${meta.env}"
+          app_name = "log-shipper"
+        }
+      }
+      resources {
+        cpu    = 100
+        memory = 100
+      }
+    }
+
+    task "log-rotator" {
+      # all of the templates are already included in our container, however, we unfortunately cant use them until
+      # this is resolved: https://github.com/hashicorp/nomad/issues/2383. Once it is we can remove the artifact
+      # stanza
+      artifact {
+        source      = "https://jenkins-archive.traitify.com/{{ env "APP_NAME" }}/{{ env "APP_NAME" }}-config_templates-{{ template "GET_HASH" }}.tar.gz"
+        destination = "/files"
+      } 
+      # turn our config template into a real file
+      template {
+        source = "files/config_templates/logrotate.conf.tmpl"
+        destination = "local/logrotate.conf"
+        change_mode = "noop"
+        perms = "664"
+      }
+      # set our environment variables
+      env {
+        CHEF_ENV = "${meta.env}"
+        APP_NAME = "static-assets"
+        GIT_HASH = "{{ template "GET_HASH" }}"
+      }
+      driver = "docker"
+      config {
+        image = "{{ template "GET_VALUE" "infra/docker/remote_repo" }}{{ env "APP_NAME" }}:{{ template "GET_HASH" }}"
+        command = "/files/run-as-service.sh"
+        args = [ "-w", "60", "-c", "/usr/local/bin/logrotate -v --state /local/logrotate.status /local/logrotate.conf" ]
+        network_mode = "host"
+        labels = {
+          env = "${meta.env}"
+          app_name = "log-rotator"
+        }
       }
       resources {
         cpu    = 100
