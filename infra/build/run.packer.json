@@ -93,7 +93,7 @@
 
         "# expand our archive files",
         "mkdir -p /files/deck-validator",
-        "tar -C /files/deck-validator -zxvf /files/static-assets.tar.gz", "rm /files/static-assets.tar.gz",
+        "tar -C /files/deck-validator -zxvf /files/static-assets.tar.gz", "rm /files/static-assets.tar.gz"
       ]
     }
   ],
