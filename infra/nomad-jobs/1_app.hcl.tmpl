@@ -131,7 +131,6 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
           "${node.unique.name}", "host__${node.unique.name}",
           "{{ template "GET_HASH" }}", "version__{{ template "GET_HASH" }}",
           "${meta.env}", "env__${meta.env}",
-          "${meta.env}-fileserve-prefix-/static_assets strip=/static_assets proto=http",
 
           "traefik.enable=true",
           "traefik.tags=${meta.env}",
