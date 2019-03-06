@@ -1,0 +1,112 @@
+{
+  "variables": {
+    "APP_NAME": "static-assets",
+    "DOCKER_REPO": null,
+    "APPUID": null,
+    "ARTIFACT_DIR": null,
+    "GIT_HASH": null
+  },
+  "builders": [{
+    "type": "docker",
+    "image": "debian:9.3",
+    "commit": true,
+    "changes": [
+      "USER appuser",
+      "ENTRYPOINT [ \"/files/dumb-init\" ]",
+      "VOLUME /archive /repo ",
+      "ENV GIT_HASH none",
+      "ENV APP_NAME {{ user `APP_NAME` }}",
+      "ENV LANG en_US.UTF-8",
+      "ENV LANGUAGE en_US:en",
+      "ENV LC_ALL en_US.UTF-8"
+    ]
+  } ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline_shebang": "/bin/bash -ex",
+      "inline": [
+          "# create our directory structure",
+          "mkdir -p /files"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "{{ user `ARTIFACT_DIR` }}/static-assets.tar.gz",
+      "destination": "/files/"
+    },
+    {
+      "type": "file",
+      "source": "{{ user `ARTIFACT_DIR` }}/config_templates",
+      "destination": "/files/config_templates"
+    },
+    {
+      "type": "shell",
+      "inline_shebang": "/bin/bash -ex",
+      "inline": [
+        "# update packages",
+        "apt-get update",
+        "apt-get -y install curl locales sudo gnupg",
+        "# add our apt-repo",
+        "curl https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo-pubkey.gpg -o /tmp/traitify-apt-repo-pubkey.gpg",
+        "apt-key add /tmp/traitify-apt-repo-pubkey.gpg",
+        "curl https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo.list -o /etc/apt/sources.list.d/traitify-apt-repo.list",
+        "cat /etc/apt/sources.list.d/traitify-apt-repo.list",
+        "apt-get update",
+        "apt-get -y install remote-syslog2 apache2 logrotate=3.15.0-3",
+        "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin",
+
+        "# set locale correctly",
+        "sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen",
+        "locale-gen",
+
+        "# add in our cert so we can pull our resources",
+        "curl https://s3.amazonaws.com/traitify-install-files/traitify.ca.crt -o /usr/local/share/ca-certificates/traitify.ca.crt",
+        "update-ca-certificates",
+
+        "# create our user",
+        "useradd -d /files -m -u {{ user `APPUID` }} -r appuser", "chown -R appuser:appuser /files/",
+
+        "# do some apache config",
+        "# make sure that some apache modules are installed",
+        "/usr/sbin/a2enmod status headers expires",
+        "# fix ownerships for our run",
+        "mkdir -p /var/run/apache2 /var/log/apache2 /var/lock/apache2", "chown -R appuser:appuser /var/run/apache2 /var/log/apache2 /var/lock/apache2",
+        "# remove the default apache virtualhost",
+        "rm /etc/apache2/sites-enabled/000-default.conf",
+
+        "# create sym links for our template files that can't be read out of /local directly",
+        "for FILE in /files/config_templates/apache/sites-enabled/*; do FILE=$(basename -s .tmpl $FILE); ln -sf /local/etc/apache2/sites-enabled/$FILE /etc/apache2/sites-enabled/$FILE; done",
+        "for FILE in /files/config_templates/apache/conf-enabled/*; do FILE=$(basename -s .tmpl $FILE); ln -sf /local/etc/apache2/conf-enabled/$FILE /etc/apache2/conf-enabled/$FILE; done",
+        "ln -sf /local/etc/apache2/ports.conf /etc/apache2/ports.conf"
+      ]
+    },
+
+    {
+      "type": "shell",
+      "inline_shebang": "/bin/bash -ex",
+      "execute_command": "sudo -u appuser -S /bin/bash -exc '{{ .Vars }} {{ .Path }}'",
+      "inline": [
+        "# set up our install files",
+        "curl https://s3.amazonaws.com/traitify-install-files/dumb-init_1.1.1_amd64 -o /files/dumb-init", "chmod +x /files/dumb-init",
+        "curl https://jenkins-archive.traitify.com/ops-scripts/run-as-service-511c86647279eda61cfeed265697eda800cc4039.sh -o /files/run-as-service.sh", "chmod +x /files/run-as-service.sh",
+
+        "# expand our archive files",
+        "mkdir -p /files/static-assets",
+        "tar -C /files/static-assets -zxvf /files/static-assets.tar.gz", "rm /files/static-assets.tar.gz"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "docker-tag",
+      "repository": "{{ user `DOCKER_REPO`}}{{ user `APP_NAME` }}",
+      "tag": "{{ user `GIT_HASH` }}"
+    },
+    {
+      "type": "docker-tag",
+      "repository": "{{ user `DOCKER_REPO`}}{{ user `APP_NAME` }}",
+      "tag": "latest"
+    }
+  ]
+}

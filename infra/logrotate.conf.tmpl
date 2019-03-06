@@ -1,0 +1,14 @@
+# we need to rotate any logs that are not writen to stderr or stdout (and therefor
+# rotate by nomad) or rotate by the apps themselves
+{{ template "GET_VALUE" "infra/apache/error_log" }}
+{{ template "GET_VALUE" "infra/apache/access_log" }}
+{
+        missingok
+        size 500M
+        rotate 5
+        compress
+        # we need to use copytruncate because we dont have acess to 
+        # the applications inside our rotate container so we can'template
+        # run postrotate scripts
+        copytruncate
+}

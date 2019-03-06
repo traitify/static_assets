@@ -1,0 +1,97 @@
+{
+  "variables": {
+    "APP_NAME": "static-assets",
+    "DOCKER_REPO": null,
+    "APPUID": null,
+    "GIT_HASH": null
+  },
+  "builders": [{
+    "type": "docker",
+    "image": "debian:9.3",
+    "commit": true,
+    "changes": [
+      "USER appuser",
+      "ENTRYPOINT [ \"/files/dumb-init\", \"bash\", \"-ex\", \"/files/build.sh\" ]",
+      "VOLUME /archive /repo ",
+      "ENV GIT_HASH none",
+      "ENV APP_NAME {{ user `APP_NAME` }}",
+      "ENV LANG en_US.UTF-8",
+      "ENV LANGUAGE en_US:en",
+      "ENV LC_ALL en_US.UTF-8"
+    ]
+  } ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline_shebang": "/bin/bash -ex",
+      "inline": [
+        "# update packages",
+        "apt-get update",
+        "apt-get -y install curl locales sudo",
+        "rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin",
+
+        "# set locale correctly",
+        "sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen",
+        "locale-gen",
+
+        "# add in our cert so we can pull our resources",
+        "curl https://s3.amazonaws.com/traitify-install-files/traitify.ca.crt -o /usr/local/share/ca-certificates/traitify.ca.crt",
+        "update-ca-certificates",
+
+        "# create our user",
+        "useradd -d /files -m -u {{ user `APPUID` }} -r appuser"
+      ]
+    },
+    {
+      "type": "shell",
+      "inline_shebang": "/bin/bash -ex",
+      "execute_command": "sudo -u appuser -S /bin/bash -exc '{{ .Vars }} {{ .Path }}'",
+      "inline": [
+        "# set up our install files",
+        "curl https://s3.amazonaws.com/traitify-install-files/dumb-init_1.1.1_amd64 -o /files/dumb-init",
+        "chmod +x /files/dumb-init",
+        "# pull our utility scripts that we use",
+        "curl https://jenkins-archive.traitify.com/ops-scripts/template-combiner-f63d14963e3e3f8d66659bcc44def7d89e59ee79.sh -o /files/template-combiner.sh",
+        "chmod +x /files/template-combiner.sh",
+        "curl https://jenkins-archive.traitify.com/ops-scripts/template-functions-f63d14963e3e3f8d66659bcc44def7d89e59ee79.tmpl -o /files/template-functions.tmpl"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "infra/build/build.sh",
+      "destination": "/files/build.sh"
+    },
+    {
+      "type": "file",
+      "source": "infra/build/compile.sh",
+      "destination": "/files/compile.sh"
+    },
+    {
+      "type": "file",
+      "source": "infra/build/config.sh",
+      "destination": "/files/config.sh"
+    },
+    {
+      "type": "file",
+      "source": "infra/build/jobs.sh",
+      "destination": "/files/jobs.sh"
+    },
+    {
+      "type": "file",
+      "source": "infra/build/archive.sh",
+      "destination": "/files/archive.sh"
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "docker-tag",
+      "repository": "{{ user `DOCKER_REPO`}}{{ user `APP_NAME` }}-builder",
+      "tag": "{{ user `GIT_HASH` }}"
+    },
+    {
+      "type": "docker-tag",
+      "repository": "{{ user `DOCKER_REPO`}}{{ user `APP_NAME` }}-builder",
+      "tag": "latest"
+    }
+  ]
+}
