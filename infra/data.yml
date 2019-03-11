@@ -3,7 +3,6 @@ default:
     nomad:
       auto_revert: true 
       role: "public-cluster"
-      aws_lifecycle: "spot"
       resources:
         cpu: 500
         memory: 500
@@ -19,4 +18,3 @@ prod:
   infra: 
     nomad:  
       auto_revert: true
-      aws_lifecycle: "scheduled"

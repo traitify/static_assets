@@ -11,8 +11,8 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
     value     = "{{ env "CHEF_ENV" }}"
   }
   constraint {
-    attribute = "${meta.aws_lifecycle}"
-    value     = "{{ template "GET_VALUE" "infra/nomad/aws_lifecycle" }}"
+    attribute = "${meta.allow_transferable_jobs}"
+    value     = "true"
   }
 
 # set our update policy
