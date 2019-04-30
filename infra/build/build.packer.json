@@ -51,9 +51,9 @@
         "curl https://s3.amazonaws.com/traitify-install-files/dumb-init_1.1.1_amd64 -o /files/dumb-init",
         "chmod +x /files/dumb-init",
         "# pull our utility scripts that we use",
-        "curl https://jenkins-archive.traitify.com/ops-scripts/template-combiner-f63d14963e3e3f8d66659bcc44def7d89e59ee79.sh -o /files/template-combiner.sh",
+        "curl https://jenkins-archive.traitify.com/ops-scripts/template-combiner-73ca2ee645669d1e61db9751c0321365c87af18a.sh -o /files/template-combiner.sh",
         "chmod +x /files/template-combiner.sh",
-        "curl https://jenkins-archive.traitify.com/ops-scripts/template-functions-f63d14963e3e3f8d66659bcc44def7d89e59ee79.tmpl -o /files/template-functions.tmpl"
+        "curl https://jenkins-archive.traitify.com/ops-scripts/template-functions-73ca2ee645669d1e61db9751c0321365c87af18a.tmpl -o /files/template-functions.tmpl"
       ]
     },
     {
