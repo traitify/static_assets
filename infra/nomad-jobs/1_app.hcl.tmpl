@@ -2,6 +2,14 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
   datacenters = ["awse"]
   type = "service"
 
+  spread {
+    attribute = "${attr.platform.aws.placement.availability-zone}"
+  }
+
+  spread {
+    attribute = "${node.unique.name}"
+  }
+
   constraint {
     attribute = "${meta.role}"
     value     = "{{ template "GET_VALUE" "infra/nomad/role" }}"
