@@ -1,0 +1,90 @@
+pipeline{
+    agent any
+    options { 
+        buildDiscarder( logRotator( numToKeepStr: '5') )
+        disableConcurrentBuilds()
+    }
+    environment {
+        // we need this to be dynamically set.  however, this uses sh as a shell so we need to support that
+        CHEF_ENV = sh(label: "Set CHEF_ENV",
+             script: 'CHEF_ENV=${BRANCH_NAME}; CHEF_ENV=\${CHEF_ENV##deploy-}; [ "\${CHEF_ENV}" = "regression" ] && CHEF_ENV="stag" ; echo \${CHEF_ENV}', , returnStdout: true).trim() 
+        GIT_HASH = "${GIT_COMMIT}"
+        APP_NAME = "static-assets"
+        CONSUL_HTTP_TOKEN = credentials("6e1aeed6-4257-4c87-8928-96500b936545")
+        GITHUB_TOKEN = credentials("github-status-update-token")
+        DATA_FILE = "infra/data.yml"
+        ARCHIVE_DIR = "/data/archive/${APP_NAME}"
+    }
+    stages {
+        // notify slack of our build
+        stage("notify") {
+            steps {
+                slackSend(color: "warning", message: "${JOB_NAME} - ${BUILD_DISPLAY_NAME} Build Started \nView Logs here: https://papertrailapp.com/groups/1796053/events?q=${BUILD_TAG}")
+            }
+        }
+        // we run this for PRs since we don't want to do an actual build
+        stage("test") {
+            when { 
+                changeRequest() 
+            }
+            steps{
+                logstash {
+                    sh (
+                        label: "Build and Test",
+                        script: "bash /var/www/html/jenkins.traitify.com/archive/ops_scripts/run_build.sh -R -a ${APP_NAME} -w ${WORKSPACE} -c ${WORKSPACE}/build -t ${ARCHIVE_DIR} -g ${GIT_COMMIT} -u 'https://papertrailapp.com/groups/1796053/events?q=${BUILD_TAG}'"
+                    )
+                }
+            }
+        }
+        // we run this for deploy requests
+        stage("deploy") {
+            when { 
+                anyOf {
+                    branch 'deploy-*' 
+                    branch 'regression'
+                }
+                not {
+                    branch 'deploy-prod'
+                }
+            }
+            steps{
+                logstash {
+                    sh (
+                        label: "Build",
+                        script: "bash /var/www/html/jenkins.traitify.com/archive/ops_scripts/run_build.sh -R -p -r ${DOCKER_REPO} -a ${APP_NAME} -w ${WORKSPACE} -c ${WORKSPACE}/build -t ${ARCHIVE_DIR} -g ${GIT_COMMIT} -u 'https://papertrailapp.com/groups/1796053/events?q=${BUILD_TAG}'"
+                    )
+                    sh (
+                        label: "Upload app info to consul",
+                        script: "ruby /var/www/html/jenkins.traitify.com/archive/ops_scripts/consul-app-config-populate.rb -g $GIT_COMMIT -n $APP_NAME -c $DATA_FILE -a $CONSUL_ADDR"
+                    )
+                    build (
+                        job: "nomad-test", 
+                            parameters: [ 
+                                string(name: "APP_WORKSPACE", value:"${WORKSPACE}"),
+                                string(name: "GIT_COMMIT", value: "${GIT_COMMIT}"),
+                                string(name: "CHEF_ENV", value: "${CHEF_ENV}"),
+                                string(name: "APP_NAME", value: "${APP_NAME}")
+                            ]
+                    )
+                    // once everything has been tested we do the deploy
+                    sh (
+                        label: "Run Deploy Script",
+                        script: "/var/www/html/jenkins.traitify.com/archive/ops-scripts/deploy2.sh -e ${CHEF_ENV} -a ${APP_NAME} -d ${GIT_COMMIT}"
+                    )
+                }
+            }
+        }
+    }
+    // post out to slack for updates
+    post {
+        success {
+          slackSend(color: "good", message: "${JOB_NAME} - ${BUILD_DISPLAY_NAME} - Succeeded \nView Logs here: https://papertrailapp.com/groups/1796053/events?q=${BUILD_TAG}")
+        }
+        failure {
+          slackSend(color: "danger", message: "${JOB_NAME} - ${BUILD_DISPLAY_NAME} - Failed \nView Logs here: https://papertrailapp.com/groups/1796053/events?q=${BUILD_TAG}")
+        }
+        aborted {
+          slackSend(color: "#a9a9a9", message: "${JOB_NAME} - ${BUILD_DISPLAY_NAME} - Aborted \nView Logs here: https://papertrailapp.com/groups/1796053/events?q=${BUILD_TAG}")
+        }
+    }
+}
