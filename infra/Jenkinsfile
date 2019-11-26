@@ -31,7 +31,7 @@ pipeline{
                 logstash {
                     sh (
                         label: "Build and Test",
-                        script: "bash /var/www/html/jenkins.traitify.com/archive/ops_scripts/run_build.sh -R -a ${APP_NAME} -w ${WORKSPACE} -c ${WORKSPACE}/build -t ${ARCHIVE_DIR} -g ${GIT_COMMIT} -u 'https://papertrailapp.com/groups/1796053/events?q=${BUILD_TAG}'"
+                        script: "bash /var/www/html/jenkins.traitify.com/archive/ops_scripts/run_build.sh -R -r ${DOCKER_REPO} -a ${APP_NAME}  -w ${WORKSPACE} -c ${WORKSPACE}/build -t ${ARCHIVE_DIR} -g ${GIT_COMMIT} -u 'https://papertrailapp.com/groups/1796053/events?q=${BUILD_TAG}'"
                     )
                 }
             }

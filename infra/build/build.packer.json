@@ -1,6 +1,7 @@
 {
   "variables": {
     "APP_NAME": "static-assets",
+    "OPS_SCRIPTS_VERSION": "{{ consul_key `deploy/version/ops-scripts/prod` }}",
     "DOCKER_REPO": null,
     "APPUID": null,
     "GIT_HASH": null
@@ -35,7 +36,7 @@
         "locale-gen",
 
         "# add in our cert so we can pull our resources",
-        "curl https://s3.amazonaws.com/traitify-install-files/traitify.ca.crt -o /usr/local/share/ca-certificates/traitify.ca.crt",
+        "curl -f https://s3.amazonaws.com/traitify-install-files/traitify.ca.crt -o /usr/local/share/ca-certificates/traitify.ca.crt",
         "update-ca-certificates",
 
         "# create our user",
@@ -48,12 +49,12 @@
       "execute_command": "sudo -u appuser -S /bin/bash -exc '{{ .Vars }} {{ .Path }}'",
       "inline": [
         "# set up our install files",
-        "curl https://s3.amazonaws.com/traitify-install-files/dumb-init_1.1.1_amd64 -o /files/dumb-init",
+        "curl -f https://s3.amazonaws.com/traitify-install-files/dumb-init_1.1.1_amd64 -o /files/dumb-init",
         "chmod +x /files/dumb-init",
         "# pull our utility scripts that we use",
-        "curl https://jenkins-archive.traitify.com/ops-scripts/template-combiner-73ca2ee645669d1e61db9751c0321365c87af18a.sh -o /files/template-combiner.sh",
+        "curl -f https://jenkins-archive.traitify.com/ops-scripts/template-combiner-{{ user `OPS_SCRIPTS_VERSION` }}.sh -o /files/template-combiner.sh",
         "chmod +x /files/template-combiner.sh",
-        "curl https://jenkins-archive.traitify.com/ops-scripts/template-functions-73ca2ee645669d1e61db9751c0321365c87af18a.tmpl -o /files/template-functions.tmpl"
+        "curl -f https://jenkins-archive.traitify.com/ops-scripts/template-functions-{{ user `OPS_SCRIPTS_VERSION` }}.tmpl -o /files/template-functions.tmpl"
       ]
     },
     {
