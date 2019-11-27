@@ -1,6 +1,7 @@
 {
   "variables": {
     "APP_NAME": "static-assets",
+    "OPS_SCRIPTS_VERSION": "{{ consul_key `deploy/version/ops-scripts/prod` }}",
     "DOCKER_REPO": null,
     "APPUID": null,
     "ARTIFACT_DIR": null,
@@ -48,9 +49,9 @@
         "apt-get update",
         "apt-get -y install curl locales sudo gnupg",
         "# add our apt-repo",
-        "curl https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo-pubkey.gpg -o /tmp/traitify-apt-repo-pubkey.gpg",
+        "curl -f https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo-pubkey.gpg -o /tmp/traitify-apt-repo-pubkey.gpg",
         "apt-key add /tmp/traitify-apt-repo-pubkey.gpg",
-        "curl https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo.list -o /etc/apt/sources.list.d/traitify-apt-repo.list",
+        "curl -f https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo.list -o /etc/apt/sources.list.d/traitify-apt-repo.list",
         "cat /etc/apt/sources.list.d/traitify-apt-repo.list",
         "apt-get update",
         "apt-get -y install remote-syslog2 apache2 logrotate=3.15.0-3",
@@ -61,7 +62,7 @@
         "locale-gen",
 
         "# add in our cert so we can pull our resources",
-        "curl https://s3.amazonaws.com/traitify-install-files/traitify.ca.crt -o /usr/local/share/ca-certificates/traitify.ca.crt",
+        "curl -f https://s3.amazonaws.com/traitify-install-files/traitify.ca.crt -o /usr/local/share/ca-certificates/traitify.ca.crt",
         "update-ca-certificates",
 
         "# create our user",
@@ -88,8 +89,8 @@
       "execute_command": "sudo -u appuser -S /bin/bash -exc '{{ .Vars }} {{ .Path }}'",
       "inline": [
         "# set up our install files",
-        "curl https://s3.amazonaws.com/traitify-install-files/dumb-init_1.1.1_amd64 -o /files/dumb-init", "chmod +x /files/dumb-init",
-        "curl https://jenkins-archive.traitify.com/ops-scripts/run-as-service-511c86647279eda61cfeed265697eda800cc4039.sh -o /files/run-as-service.sh", "chmod +x /files/run-as-service.sh",
+        "curl -f https://s3.amazonaws.com/traitify-install-files/dumb-init_1.1.1_amd64 -o /files/dumb-init", "chmod +x /files/dumb-init",
+        "curl -f https://jenkins-archive.traitify.com/ops-scripts/run-as-service-{{ user `OPS_SCRIPTS_VERSION` }}.sh -o /files/run-as-service.sh", "chmod +x /files/run-as-service.sh",
 
         "# expand our archive files",
         "mkdir -p /files/static-assets",
