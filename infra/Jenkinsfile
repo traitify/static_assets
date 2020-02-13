@@ -10,7 +10,8 @@ pipeline{
              script: 'CHEF_ENV=${BRANCH_NAME}; CHEF_ENV=\${CHEF_ENV##deploy-}; [ "\${CHEF_ENV}" = "regression" ] && CHEF_ENV="stag" ; echo \${CHEF_ENV}', , returnStdout: true).trim() 
         GIT_HASH = "${GIT_COMMIT}"
         APP_NAME = "static-assets"
-        CONSUL_HTTP_TOKEN = credentials("jenkins_consul_token")
+        CONSUL_CREDS = credentials("jenkins_consul_token_pass")
+        CONSUL_HTTP_TOKEN = "${CONSUL_CREDS_PSW}"
         GITHUB_TOKEN = credentials("github-status-update-token")
         DATA_FILE = "infra/data.yml"
         ARCHIVE_DIR = "/data/archive/${APP_NAME}"
