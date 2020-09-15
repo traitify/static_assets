@@ -1,6 +1,7 @@
 {
   "variables": {
     "APP_NAME": "static-assets",
+    "DEBIAN_VERSION": "buster",
     "OPS_SCRIPTS_VERSION": "{{ consul_key `deploy/version/ops-scripts/prod` }}",
     "DOCKER_REPO": null,
     "APPUID": null,
@@ -9,7 +10,7 @@
   },
   "builders": [{
     "type": "docker",
-    "image": "debian:9.3",
+    "image": "debian:{{ user `DEBIAN_VERSION` }}-slim",
     "commit": true,
     "changes": [
       "USER appuser",
@@ -47,11 +48,12 @@
       "inline": [
         "# update packages",
         "apt-get update",
+        "apt-get upgrade -y",
         "apt-get -y install curl locales sudo gnupg",
         "# add our apt-repo",
         "curl -f https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo-pubkey.gpg -o /tmp/traitify-apt-repo-pubkey.gpg",
         "apt-key add /tmp/traitify-apt-repo-pubkey.gpg",
-        "curl -f https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo.list -o /etc/apt/sources.list.d/traitify-apt-repo.list",
+        "curl -f https://s3.amazonaws.com/traitify-install-files/traitify-apt-repo.{{ user `DEBIAN_VERSION` }}.list -o /etc/apt/sources.list.d/traitify-apt-repo.list",
         "cat /etc/apt/sources.list.d/traitify-apt-repo.list",
         "apt-get update",
         "apt-get -y install remote-syslog2 apache2 logrotate=3.15.0-3",
