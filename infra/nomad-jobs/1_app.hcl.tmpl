@@ -146,7 +146,8 @@ job "static-assets-{{ env "CHEF_ENV" }}" {
           "traefik.tags=${meta.env}",
           "traefik.backend.loadbalancer.method=drr",
           "traefik.frontend.passHostHeader=true",
-          "traefik.frontend.rule=Host:fileserve.traitify.com,fileserve-${meta.env}.traitify.com,fileserve.${meta.env}.awse.traitify.com,local.fileserve.service.consul;PathPrefixStrip:/static_assets"
+          "traefik.frontend.rule=Host:fileserve.traitify.com,fileserve-${meta.env}.traitify.com,fileserve.${meta.env}.awse.traitify.com,local.fileserve.service.consul;PathPrefixStrip:/static_assets",
+          "traefik.frontend.priority=500"
         ]
 
         port = "http"
